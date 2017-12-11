@@ -1,0 +1,45 @@
+
+spring:
+  data:
+    mongodb:
+      database: 'frogbot'
+      host: 'localhost'
+      port: 27017
+
+logging:
+  level:
+    io.retrofrog.frogbot: INFO
+
+releaseStage: 'development'
+
+irc:
+  enabled: false
+  host: 'irc.myserver.net'
+  port: 6667
+  ssl: false
+  nick: 'mybot'
+  channel: '#mychannel'
+
+pushover:
+  enabled: false
+  apiKey: 'my-key'
+  userKey: 'my-user-key'
+
+postmark:
+  enabled: false
+  apiKey: 'my-key'
+  sender: 'me@email.com'
+
+mixpanel:
+  enabled: false
+  token: 'my-token'
+
+bugsnag:
+  enabled: false
+  apiKey: 'my-key'
+
+coinigy:
+  enabled: false
+  apiKey: 'my-key'
+  apiSecret: 'my-secret'
+  privateChannelId: 'my-channel-id'

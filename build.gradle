@@ -1,0 +1,64 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://dl.bintray.com/sacoo7/Maven'
+        }
+    }
+    dependencies {
+        classpath('org.springframework.boot:spring-boot-gradle-plugin:1.5.9.RELEASE')
+    }
+}
+
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+
+jar {
+    baseName = 'frogbot'
+    version =  '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://dl.bintray.com/sacoo7/Maven'
+    }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile 'org.springframework.boot:spring-boot-starter'
+    compile 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    compile 'org.springframework.boot:spring-boot-starter-websocket'
+    compile 'org.springframework.boot:spring-boot-starter-test'
+
+    compile 'org.springframework:spring-web'
+
+    compile 'com.fasterxml.jackson.core:jackson-databind'
+    compile 'org.influxdb:influxdb-java:2.7'
+    compile 'org.ta4j:ta4j-core:0.10'
+
+    compile ('io.github.sac:SocketclusterClientJava:1.7.2') {
+        exclude group: 'com.vaadin.external.google', module: 'android-json'
+    }
+    compile 'org.kitteh.irc:client-lib:3.3.1'
+
+    compile 'org.knowm.xchange:xchange-core:4.3.0'
+    compile 'org.knowm.xchange:xchange-gdax:4.3.0'
+    compile 'org.knowm.xchange:xchange-bittrex:4.3.0'
+    compile 'org.knowm.xchange:xchange-cexio:4.3.0'
+    compile 'org.knowm.xchange:xchange-poloniex:4.3.0'
+
+    compile 'com.mixpanel:mixpanel-java:1.4.4'
+    compile 'com.bugsnag:bugsnag:3.+'
+
+    compile 'org.javassist:javassist:3.18.2-GA' // workaround for ${javassist.version} placeholder issue*
+    compile 'com.github.mongobee:mongobee:0.13'
+
+    testCompile 'junit:junit'
+}
