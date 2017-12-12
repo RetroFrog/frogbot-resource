@@ -3,6 +3,7 @@ package io.retrofrog.frogbot.integrations.coinigy;
 import io.retrofrog.frogbot.integrations.coinigy.exceptions.CoinigyException;
 import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyExchange;
 import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyMarket;
+import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyNotification;
 import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyResponse;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -57,5 +58,17 @@ public class CoinigyRestApiTest {
         CoinigyRestApi restApi = new CoinigyRestApi(true, apiKey, apiSecret);
         CoinigyResponse<CoinigyMarket> response = restApi.getMarkets();
         Assert.assertTrue(response.getData().size() > 0);
+    }
+
+    @Test
+    public void getActivity() throws CoinigyException {
+        CoinigyRestApi restApi = new CoinigyRestApi(true, apiKey, apiSecret);
+        CoinigyResponse<CoinigyNotification> response = restApi.getActivity();
+    }
+
+    @Test
+    public void getPushNotifications() throws CoinigyException {
+        //CoinigyRestApi restApi = new CoinigyRestApi(true, apiKey, apiSecret);
+        //CoinigyResponse<CoinigyNotification> response = restApi.getPushNotifications();
     }
 }

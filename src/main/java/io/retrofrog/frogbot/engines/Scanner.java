@@ -1,17 +1,19 @@
 package io.retrofrog.frogbot.engines;
 
-import io.retrofrog.frogbot.integrations.*;
-import io.retrofrog.frogbot.integrations.coinmarketcap.CoinMarketCap;
+import io.retrofrog.frogbot.integrations.Mixpanel;
+import io.retrofrog.frogbot.integrations.Postmark;
+import io.retrofrog.frogbot.integrations.Pushover;
+import io.retrofrog.frogbot.integrations.coinmarketcap.CoinMarketCapApi;
 import io.retrofrog.frogbot.integrations.coinmarketcap.models.MarketData;
 import io.retrofrog.frogbot.integrations.irc.Irc;
+import io.retrofrog.frogbot.integrations.irc.utils.IrcString;
+import io.retrofrog.frogbot.integrations.irc.utils.IrcStyle;
 import io.retrofrog.frogbot.models.Prospect;
-import io.retrofrog.frogbot.models.StrategyResult;
 import io.retrofrog.frogbot.models.ScanStrategy;
+import io.retrofrog.frogbot.models.StrategyResult;
 import io.retrofrog.frogbot.repositories.ScanStrategyRepository;
 import io.retrofrog.frogbot.utils.ColorString;
 import io.retrofrog.frogbot.utils.Colors;
-import io.retrofrog.frogbot.integrations.irc.utils.IrcString;
-import io.retrofrog.frogbot.integrations.irc.utils.IrcStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +29,7 @@ public class Scanner {
     private static final DecimalFormat f = new DecimalFormat("##.00");
 
     @Autowired
-    private CoinMarketCap coinMarketCap;
+    private CoinMarketCapApi coinMarketCapApi;
     @Autowired
     private Pushover pushover;
     @Autowired
@@ -47,7 +49,7 @@ public class Scanner {
     }
 
     public void scanCoinMarketCap() {
-        List<MarketData> currentData = coinMarketCap.getMarketData();
+        List<MarketData> currentData = coinMarketCapApi.getMarketData();
         List<StrategyResult> scanResults = new ArrayList<>();
 
         if (previousData.size() == 0) {

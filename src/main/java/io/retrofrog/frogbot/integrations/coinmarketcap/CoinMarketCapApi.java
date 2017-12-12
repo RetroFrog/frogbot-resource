@@ -12,9 +12,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Service
-public class CoinMarketCap {
+public class CoinMarketCapApi {
 
-    private static final Logger log = LoggerFactory.getLogger(CoinMarketCap.class);
+    private static final Logger log = LoggerFactory.getLogger(CoinMarketCapApi.class);
 
     public List<MarketData> getMarketData() {
         RestTemplate restTemplate = new RestTemplate();
