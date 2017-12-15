@@ -1,15 +1,14 @@
 package io.retrofrog.frogbot.integrations.coinigy;
 
 import io.retrofrog.frogbot.integrations.coinigy.exceptions.CoinigyException;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyExchange;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyMarket;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyNotification;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyResponse;
+import io.retrofrog.frogbot.integrations.coinigy.models.rest.*;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +20,8 @@ import static org.hamcrest.CoreMatchers.containsString;
 @SpringBootTest
 @SpringBootConfiguration
 public class CoinigyRestApiTest {
+    private static final Logger log = LoggerFactory.getLogger(CoinigyRestApiTest.class);
+
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -70,5 +71,11 @@ public class CoinigyRestApiTest {
     public void getPushNotifications() throws CoinigyException {
         //CoinigyRestApi restApi = new CoinigyRestApi(true, apiKey, apiSecret);
         //CoinigyResponse<CoinigyNotification> response = restApi.getPushNotifications();
+    }
+
+    @Test
+    public void getAccounts() throws CoinigyException {
+        CoinigyRestApi restApi = new CoinigyRestApi(true, apiKey, apiSecret);
+        CoinigyResponse<CoinigyAccount> response = restApi.getAccounts();
     }
 }

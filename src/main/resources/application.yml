@@ -9,6 +9,7 @@ spring:
 logging:
   level:
     io.retrofrog.frogbot: INFO
+    io.retrofrog.frogbot.integrations.coinigy.http: INFO
 
 releaseStage: 'development'
 

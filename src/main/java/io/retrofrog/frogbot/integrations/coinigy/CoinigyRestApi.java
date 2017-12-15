@@ -2,10 +2,7 @@ package io.retrofrog.frogbot.integrations.coinigy;
 
 import io.retrofrog.frogbot.integrations.coinigy.exceptions.CoinigyException;
 import io.retrofrog.frogbot.integrations.coinigy.http.CoinigyRestTemplate;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyExchange;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyMarket;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyNotification;
-import io.retrofrog.frogbot.integrations.coinigy.models.rest.CoinigyResponse;
+import io.retrofrog.frogbot.integrations.coinigy.models.rest.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +33,10 @@ public class CoinigyRestApi {
         }
 
         this.restTemplate = new CoinigyRestTemplate(apiKey, apiSecret);
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     /**
@@ -77,6 +78,28 @@ public class CoinigyRestApi {
                 new ParameterizedTypeReference<CoinigyResponse<CoinigyNotification>>() {
                 });
         CoinigyResponse<CoinigyNotification> cr = response.getBody();
+
+        if (cr.isError())
+            throw new CoinigyException(cr.getErrorCode(), cr.getErrorMessage());
+
+        return response.getBody();
+    }
+
+    /**
+     * Get list of connected exchange accounts
+     *
+     * @return response containing list of connected exchange accounts
+     * @throws CoinigyException
+     */
+    public CoinigyResponse<CoinigyAccount> getAccounts() throws CoinigyException {
+        if (!enabled)
+            return null;
+
+        ResponseEntity<CoinigyResponse<CoinigyAccount>> response = restTemplate.exchange(
+                URL + "accounts", HttpMethod.POST, null,
+                new ParameterizedTypeReference<CoinigyResponse<CoinigyAccount>>() {
+                });
+        CoinigyResponse<CoinigyAccount> cr = response.getBody();
 
         if (cr.isError())
             throw new CoinigyException(cr.getErrorCode(), cr.getErrorMessage());
