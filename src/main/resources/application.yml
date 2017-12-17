@@ -1,3 +1,5 @@
+server:
+  port: 3333
 
 spring:
   data:
@@ -12,6 +14,14 @@ logging:
     io.retrofrog.frogbot.integrations.coinigy.http: INFO
 
 releaseStage: 'development'
+
+influxdb:
+  enabled: true
+  host: 'localhost'
+  port: 8086
+  username: 'root'
+  password: 'root'
+  database: 'frogbot'
 
 irc:
   enabled: false

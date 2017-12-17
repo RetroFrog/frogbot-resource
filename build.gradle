@@ -40,7 +40,7 @@ dependencies {
     compile 'org.springframework:spring-web'
 
     compile 'com.fasterxml.jackson.core:jackson-databind'
-    compile 'org.influxdb:influxdb-java:2.7'
+    compile 'org.influxdb:influxdb-java:2.8'
     compile 'org.ta4j:ta4j-core:0.10'
 
     compile ('io.github.sac:SocketclusterClientJava:1.7.2') {
