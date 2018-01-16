@@ -12,6 +12,7 @@ public class StrategyResult {
     private float volumeChangePercent;
     private boolean match;
     private Set<String> targetExchanges;
+    private int confirmations;
 
     public StrategyResult() {}
 
@@ -23,6 +24,7 @@ public class StrategyResult {
         this.volumeChangePercent = volumeChangePercent;
         this.match = match;
         targetExchanges = new HashSet<>();
+        confirmations = 0;
     }
 
     public ScanStrategy getStrategy() {
@@ -79,5 +81,13 @@ public class StrategyResult {
             sb.append(s).append(", ");
         }
         return sb.toString().substring(0, sb.length() - 2);
+    }
+
+    public int getConfirmations() {
+        return confirmations;
+    }
+
+    public void incrementConfirmations() {
+        ++confirmations;
     }
 }

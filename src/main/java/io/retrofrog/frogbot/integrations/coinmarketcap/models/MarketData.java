@@ -2,9 +2,15 @@ package io.retrofrog.frogbot.integrations.coinmarketcap.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Document(collection = "market-data")
 public class MarketData {
+
+    @Id
+    private String id;
 
     @JsonProperty("id")
     private String coinId;

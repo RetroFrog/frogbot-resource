@@ -19,10 +19,10 @@ public class InfluxDbService {
     private String retention;
 
     public InfluxDbService(@Value("${influxdb.enabled:false}") boolean enabled,
-                           @Value("${influxdb.host:}") String host,
+                           @Value("${influxdb.host:localhost}") String host,
                            @Value("${influxdb.port:8086}") int port,
-                           @Value("${influxdb.username}") String username,
-                           @Value("${influxdb.password}") String password,
+                           @Value("${influxdb.username:}") String username,
+                           @Value("${influxdb.password:}") String password,
                            @Value("${influxdb.database:frogbot}") String database,
                            @Value("${influxdb.retention:7d}") String retention) {
 
@@ -38,6 +38,6 @@ public class InfluxDbService {
             return;
         influxDB = InfluxDBFactory.connect(String.format("http://%s:%d", host, port), username, password);
         influxDB.createDatabase(database);
-        influxDB.createRetentionPolicy("ticker_rp", database, retention, 0, true);
+        influxDB.createRetentionPolicy("ticker_rp", database, retention, 1, true);
     }
 }

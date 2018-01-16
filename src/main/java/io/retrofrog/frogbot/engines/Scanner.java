@@ -1,29 +1,24 @@
 package io.retrofrog.frogbot.engines;
 
 import com.bugsnag.Bugsnag;
-import io.retrofrog.frogbot.integrations.Mixpanel;
-import io.retrofrog.frogbot.integrations.Postmark;
-import io.retrofrog.frogbot.integrations.Pushover;
-import io.retrofrog.frogbot.integrations.coinigy.CoinigyRestApi;
 import io.retrofrog.frogbot.integrations.coinmarketcap.CoinMarketCapApi;
 import io.retrofrog.frogbot.integrations.coinmarketcap.models.MarketData;
-import io.retrofrog.frogbot.integrations.irc.Irc;
-import io.retrofrog.frogbot.integrations.irc.utils.IrcString;
-import io.retrofrog.frogbot.integrations.irc.utils.IrcStyle;
 import io.retrofrog.frogbot.models.ExchangeInfo;
 import io.retrofrog.frogbot.models.Prospect;
 import io.retrofrog.frogbot.models.ScanStrategy;
 import io.retrofrog.frogbot.models.StrategyResult;
 import io.retrofrog.frogbot.repositories.ExchangeInfoRepository;
+import io.retrofrog.frogbot.repositories.MarketDataRepository;
 import io.retrofrog.frogbot.repositories.ScanStrategyRepository;
+import io.retrofrog.frogbot.services.NotificationService;
 import io.retrofrog.frogbot.utils.ColorString;
 import io.retrofrog.frogbot.utils.Colors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,20 +27,16 @@ import java.util.Set;
 @Service
 public class Scanner {
     private static final Logger log = LoggerFactory.getLogger(Scanner.class);
-    private static final DecimalFormat f = new DecimalFormat("##.00");
+
+    @Value("${aggregate:false}")
+    private boolean aggregate;
+    @Autowired
+    private MarketDataRepository marketDataRepository;
 
     @Autowired
     private CoinMarketCapApi coinMarketCapApi;
     @Autowired
-    private CoinigyRestApi coinigyRestApi;
-    @Autowired
-    private Pushover pushover;
-    @Autowired
-    private Postmark postmark;
-    @Autowired
-    private Mixpanel mixpanel;
-    @Autowired
-    private Irc irc;
+    private NotificationService notificationService;
     @Autowired
     private Bugsnag bugsnag;
     @Autowired
@@ -54,9 +45,11 @@ public class Scanner {
     private ExchangeInfoRepository exchangeInfoRepository;
 
     private List<MarketData> previousData;
+    private List<StrategyResult> previousResults;
 
     public Scanner() {
         previousData = new ArrayList<>();
+        previousResults = new ArrayList<>();
     }
 
     public void scanCoinMarketCap() {
@@ -64,6 +57,13 @@ public class Scanner {
         List<ExchangeInfo> enabledExchanges = exchangeInfoRepository.findByScanEnabled(true);
         List<MarketData> currentData = coinMarketCapApi.getMarketData();
         List<StrategyResult> scanResults = new ArrayList<>();
+
+        if (aggregate) {
+            log.debug(String.format("%s", new ColorString("Storing aggregate data...", Colors.Green)));
+            for (MarketData m : currentData) {
+                marketDataRepository.save(m);
+            }
+        }
 
         if (previousData.size() == 0) {
             log.info("No previous data...");
@@ -87,6 +87,7 @@ public class Scanner {
                     if (!shouldScan)
                         continue;
 
+                    // Run strategies on the market data
                     for (ScanStrategy s : scanStrategyRepository.findByEnabled(true)) {
                         StrategyResult res = runStrategy(s, c, p);
                         if (res.isMatch()) {
@@ -98,11 +99,24 @@ public class Scanner {
                     break;
                 }
             }
+
+            // TODO run confirmations on the previous results
+            if (previousResults.size() > 0) {
+                for (StrategyResult s : previousResults) {
+                    MarketData d = s.getMarketData();
+                    if (d.getSymbol().equals(c.getSymbol())) {
+                        if (c.getPercentChangeHour() > d.getPercentChangeHour()) {
+                            // what if it is a new hour?
+                            log.debug("Confirm: " + d.getSymbol());
+                        }
+                    }
+                }
+            }
         }
 
-        sendResults(scanResults);
-        sendNotifications(scanResults);
+        notificationService.notifyScanResults(scanResults);
 
+        previousResults = scanResults;
     }
 
     private Prospect buildProspect(Prospect p, MarketData current, MarketData previous, float priceChange, float volumeChange) {
@@ -143,13 +157,19 @@ public class Scanner {
             return result;
         if (s.getMaxPercentChangeHour() != null && c.getPercentChangeHour() > s.getMaxPercentChangeHour())
             return result;
+        if (s.getPercentChangeHourIncreased() != null && s.getPercentChangeHourIncreased() != (c.getPercentChangeHour() > p.getPercentChangeHour()))
+            return result;
         if (s.getMinPercentChangeDay() != null && c.getPercentChangeDay() < s.getMinPercentChangeDay())
             return result;
         if (s.getMaxPercentChangeDay() != null && c.getPercentChangeDay() > s.getMaxPercentChangeDay())
             return result;
+        if (s.getPercentChangeDayIncreased() != null && s.getPercentChangeDayIncreased() != (c.getPercentChangeDay() > p.getPercentChangeDay()))
+            return result;
         if (s.getMinPercentChangeWeek() != null && c.getPercentChangeWeek() < s.getMinPercentChangeWeek())
             return result;
         if (s.getMaxPercentChangeWeek() != null && c.getPercentChangeWeek() > s.getMaxPercentChangeWeek())
+            return result;
+        if (s.getPercentChangeWeekIncreased() != null && s.getPercentChangeWeekIncreased() != (c.getPercentChangeWeek() > p.getPercentChangeWeek()))
             return result;
         if (s.getMinVolume() != null && c.getDayVolumeUsd() < s.getMinVolume())
             return result;
@@ -168,74 +188,6 @@ public class Scanner {
         return result;
     }
 
-    private void sendNotifications(List<StrategyResult> scanResults) {
-        if (scanResults.size() == 0)
-            return;
-        mixpanel.send("scanResults", "Scan Results", null);
-
-        StringBuilder sb = new StringBuilder();
-        for (StrategyResult r: scanResults) {
-            mixpanel.send("strategyResult", "Strategy Result", null);
-
-            MarketData d = r.getMarketData();
-            sb.append(String.format("[%s (%s) $%f/%f%% H:%f%% D:%f%% W:%f%%]",
-                    d.getName(),
-                    d.getSymbol(),
-                    d.getPriceUsd(),
-                    r.getPriceChangePercent(),
-                    d.getPercentChangeHour(),
-                    d.getPercentChangeDay(),
-                    d.getPercentChangeWeek()
-            )).append("\n");
-        }
-        pushover.send("PROSPECTS", sb.toString());
-        postmark.send("dan.armstrong@protonmail.com", "PROSPECTS", sb.toString());
-    }
-
-    private void sendResults(List<StrategyResult> scanResults) {
-        if (scanResults.size() == 0)
-            return;
-
-        log.info("\n+--------------------+\n|    Scan Results    |\n+--------------------+");
-
-        irc.send("+--------------------+");
-        irc.send("|    Scan Results    |");
-        irc.send("+--------------------+");
-
-        for (StrategyResult res : scanResults) {
-            MarketData c = res.getMarketData();
-            log.info(String.format("%s:  %s (%s) $%s(%s%%) H:%s%% D:%s%% W:%s%% V:$%s(%s%%)",
-                    new ColorString(res.getTargetExchangesString(), Colors.Bold, Colors.Magenta),
-                    new ColorString(c.getName(), Colors.Cyan),
-                    new ColorString(c.getSymbol(), Colors.Magenta),
-                    new ColorString(c.getPriceUsd(), Colors.Yellow),
-                    new ColorString(f.format(res.getPriceChangePercent()),
-                            (res.getPriceChangePercent() >= 0 ? Colors.Green : Colors.Red)),
-                    new ColorString(c.getPercentChangeHour(), (c.getPercentChangeHour() >= 0 ? Colors.Green : Colors.Red)),
-                    new ColorString(c.getPercentChangeDay(), (c.getPercentChangeDay() >= 0 ? Colors.Green : Colors.Red)),
-                    new ColorString(c.getPercentChangeWeek(), (c.getPercentChangeWeek() >= 0 ? Colors.Green : Colors.Red)),
-                    new ColorString(c.getDayVolumeUsd(), Colors.Yellow),
-                    new ColorString(f.format(res.getVolumeChangePercent()),
-                            (res.getVolumeChangePercent() >= 0 ? Colors.Green : Colors.Red))
-            ));
-
-            // IRC
-            irc.send(String.format("%s: %s (%s) $%s(%s%%) H:%s%% D:%s%% W:%s%% V:$%s(%s%%)",
-                    new IrcString(res.getTargetExchangesString(), IrcStyle.Bold, IrcStyle.Purple),
-                    new IrcString(c.getName(), IrcStyle.Cyan),
-                    new IrcString(c.getSymbol(), IrcStyle.Pink),
-                    new IrcString(c.getPriceUsd(), IrcStyle.Yellow),
-                    new IrcString(f.format(res.getPriceChangePercent()),
-                            (res.getPriceChangePercent() >= 0 ? IrcStyle.Green : IrcStyle.Red)),
-                    new IrcString(c.getPercentChangeHour(), (c.getPercentChangeHour() >= 0 ? IrcStyle.Green : IrcStyle.Red)),
-                    new IrcString(c.getPercentChangeDay(), (c.getPercentChangeDay() >= 0 ? IrcStyle.Green : IrcStyle.Red)),
-                    new IrcString(c.getPercentChangeWeek(), (c.getPercentChangeWeek() >= 0 ? IrcStyle.Green : IrcStyle.Red)),
-                    new IrcString(c.getDayVolumeUsd(), IrcStyle.Yellow),
-                    new IrcString(f.format(res.getVolumeChangePercent()),
-                            (res.getVolumeChangePercent() >= 0 ? IrcStyle.Green : IrcStyle.Red))
-            ));
-        }
-    }
 
     public float getPercentChange(float newValue, float oldValue) {
         return ((newValue - oldValue) / oldValue) * 100;

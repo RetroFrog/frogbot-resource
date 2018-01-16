@@ -16,12 +16,15 @@ public class ScanStrategy {
 
     private Float minPercentChangeHour;
     private Float maxPercentChangeHour;
+    private Boolean percentChangeHourIncreased;
 
     private Float minPercentChangeDay;
     private Float maxPercentChangeDay;
+    private Boolean percentChangeDayIncreased;
 
     private Float minPercentChangeWeek;
     private Float maxPercentChangeWeek;
+    private Boolean percentChangeWeekIncreased;
 
     private Float minVolume;
     private Float maxVolume;
@@ -36,10 +39,13 @@ public class ScanStrategy {
         enabled = true;
         minPercentChangeHour = null;
         maxPercentChangeHour = null;
+        percentChangeHourIncreased = null;
         minPercentChangeDay = null;
         maxPercentChangeDay = null;
+        percentChangeDayIncreased = null;
         minPercentChangeWeek = null;
         maxPercentChangeWeek = null;
+        percentChangeWeekIncreased = null;
         minVolume = null;
         maxVolume = null;
         minPriceChangePercent = null;
@@ -89,6 +95,14 @@ public class ScanStrategy {
         this.maxPercentChangeHour = maxPercentChangeHour;
     }
 
+    public Boolean getPercentChangeHourIncreased() {
+        return percentChangeHourIncreased;
+    }
+
+    public void setPercentChangeHourIncreased(Boolean percentChangeHourIncreased) {
+        this.percentChangeHourIncreased = percentChangeHourIncreased;
+    }
+
     public Float getMinPercentChangeDay() {
         return minPercentChangeDay;
     }
@@ -105,6 +119,14 @@ public class ScanStrategy {
         this.maxPercentChangeDay = maxPercentChangeDay;
     }
 
+    public Boolean getPercentChangeDayIncreased() {
+        return percentChangeDayIncreased;
+    }
+
+    public void setPercentChangeDayIncreased(Boolean percentChangeDayIncreased) {
+        this.percentChangeDayIncreased = percentChangeDayIncreased;
+    }
+
     public Float getMinPercentChangeWeek() {
         return minPercentChangeWeek;
     }
@@ -119,6 +141,14 @@ public class ScanStrategy {
 
     public void setMaxPercentChangeWeek(Float maxPercentChangeWeek) {
         this.maxPercentChangeWeek = maxPercentChangeWeek;
+    }
+
+    public Boolean getPercentChangeWeekIncreased() {
+        return percentChangeWeekIncreased;
+    }
+
+    public void setPercentChangeWeekIncreased(Boolean percentChangeWeekIncreased) {
+        this.percentChangeWeekIncreased = percentChangeWeekIncreased;
     }
 
     public Float getMinVolume() {
